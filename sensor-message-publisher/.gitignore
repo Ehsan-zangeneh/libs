@@ -1,0 +1,5 @@
+# exclude target folder
+target/
+.classpath
+.settings/
+.project
