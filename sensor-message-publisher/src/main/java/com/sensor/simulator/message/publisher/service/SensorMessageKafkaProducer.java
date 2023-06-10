@@ -4,10 +4,11 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-import com.sensor.simulator.message.publisher.model.SensorPulishableMessage;
+import com.sensor.simulator.message.publisher.model.EnrichedSensorMessage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,15 +21,18 @@ public class SensorMessageKafkaProducer {
 	String bootstrapServer;
 	String topicName;
 	
-	public void send(SensorPulishableMessage sensorMessage) {
+	public void send(EnrichedSensorMessage sensorMessage) {
 		log.info("attempt to send to server {%s}".formatted(bootstrapServer));
-        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, sensorMessage.toString());
+        ProducerRecord<String, String> producerRecord = new ProducerRecord<>(
+        		topicName, 
+        		String.valueOf(sensorMessage.isProblematic()),
+        		sensorMessage.toString());
 		send(producerRecord);
 	}
 	
 	private void send(ProducerRecord<String, String> producerRecord) {
 		KafkaProducer<String, String> producer = new KafkaProducer<>(getkafkaConfigProperties());
-		producer.send(producerRecord);
+		producer.send(producerRecord, this::showResult);
 		producer.flush();
 		producer.close();
 	}
@@ -45,6 +49,16 @@ public class SensorMessageKafkaProducer {
         properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
         return properties;
     
+	}
+	
+	private void showResult(RecordMetadata recordMetadata, Exception e) {
+		if(e == null) {
+			log.info("Received new metadata. \n" +
+                    "Topic:" + recordMetadata.topic() + "\n" +
+                    "Partition: " + recordMetadata.partition());
+		} else {
+			log.error("publishing to kafka faced error:", e);
+		}
 	}
 
 
