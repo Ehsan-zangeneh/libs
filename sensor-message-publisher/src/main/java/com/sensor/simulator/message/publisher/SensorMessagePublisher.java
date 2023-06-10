@@ -13,7 +13,6 @@ import lombok.experimental.FieldDefaults;
 public class SensorMessagePublisher {
 	
 	ApplicationEventPublisher applicationEventPublisher;
-	
 	public void publish(SensorPulishableMessage sensorMessage) {
 		applicationEventPublisher.publishEvent(sensorMessage);
 	}
