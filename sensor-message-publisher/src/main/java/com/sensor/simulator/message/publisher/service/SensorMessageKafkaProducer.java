@@ -1,28 +1,27 @@
 package com.sensor.simulator.message.publisher.service;
 
 import java.util.Properties;
-
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
 import com.sensor.simulator.message.publisher.model.SensorPulishableMessage;
-
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @ConfigurationProperties(prefix = "kafka.channel.configs")
 @Setter
+@Slf4j
 public class SensorMessageKafkaProducer {
 	
 	String bootstrapServer;
 	String topicName;
 	
 	public void send(SensorPulishableMessage sensorMessage) {
-		System.out.println("send to server {%s}".formatted(bootstrapServer));
+		log.info("attempt to send to server {%s}".formatted(bootstrapServer));
         ProducerRecord<String, String> producerRecord = new ProducerRecord<>(topicName, sensorMessage.toString());
 		send(producerRecord);
 	}
